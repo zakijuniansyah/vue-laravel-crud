@@ -1,5 +1,70 @@
-# Vue 3 + Vite
+# 🎨 Frontend - Vue Todo App
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+Frontend aplikasi Todo menggunakan Vue 3 dengan Composition API.
 
-Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://vuejs.org/guide/scaling-up/tooling.html#ide-support).
+---
+
+## 🚀 Tech Stack
+
+* Vue 3 (Composition API)
+* Axios
+
+---
+
+## ⚙️ Installation
+
+```bash
+npm install
+npm run dev
+```
+
+---
+
+## 🔗 Koneksi API
+
+Edit file:
+
+```
+src/services/api.js
+```
+
+```js
+baseURL: "http://127.0.0.1:8000/api"
+```
+
+---
+
+## 📁 Struktur
+
+```
+src/
+├── views/
+│   ├── Dashboard.vue
+│
+├── services/
+│   └── api.js
+```
+
+---
+
+## 🎨 UI
+
+* Custom CSS
+* Dark Mode otomatis (prefers-color-scheme)
+
+---
+
+## 📌 Fitur
+
+* CRUD Todo (GET, POST, PUT, DELETE)
+* Responsive UI
+
+---
+
+## 💡 Notes
+
+Pastikan backend Laravel sudah berjalan di:
+
+```
+http://127.0.0.1:8000
+```
