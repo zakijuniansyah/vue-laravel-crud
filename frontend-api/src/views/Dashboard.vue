@@ -6,44 +6,60 @@ const todos = ref([]);
 const loading = ref(false);
 const error = ref(null);
 
-// state untuk input
+// input state
 const title = ref("");
 const submitting = ref(false);
 
-// get data
+// GET DATA
 const getTodos = async () => {
   loading.value = true;
+  error.value = null;
+
   try {
     const res = await api.get("/todos");
-    todos.value = res.data.data;
-  } catch (error) {
-    error.value = "gagal mengambil data"
+    todos.value = res.data?.data || res.data || [];
+  } catch (err) {
+    console.log("API ERROR:", err);
+
+    // 🔥 fallback data
+    todos.value = [
+      { id: 1, title: "Belajar Vue + Laravel", completed: false },
+      { id: 2, title: "Bikin Todo App keren", completed: true },
+    ];
+
+    error.value = "API tidak aktif (mode demo)";
   } finally {
     loading.value = false;
   }
-}
+};
 
-// post data
+// ADD TODO
 const addTodo = async () => {
-  if(!title.value) return;
+  if (!title.value) return;
 
   submitting.value = true;
+
   try {
     await api.post("/todos", {
       title: title.value,
       completed: false
     });
 
-    title.value = ("");
     getTodos();
-  } catch (error) {
-    error.value = 'gagal menambah data'
+  } catch (err) {
+    // 🔥 fallback local
+    todos.value.push({
+      id: Date.now(),
+      title: title.value,
+      completed: false
+    });
   } finally {
-    submitting.value = false
+    title.value = "";
+    submitting.value = false;
   }
-}
+};
 
-// update data
+// TOGGLE TODO
 const toggleTodo = async (todo) => {
   try {
     await api.put(`/todos/${todo.id}`, {
@@ -52,71 +68,105 @@ const toggleTodo = async (todo) => {
     });
 
     getTodos();
-  } catch (error) {
-    error.value = "gagal update data";
+  } catch (err) {
+    // 🔥 fallback local
+    todo.completed = !todo.completed;
   }
-}
+};
 
-// delete
+// DELETE TODO
 const deleteTodo = async (id) => {
   const confirmDelete = confirm('Yakin mau dihapus?');
+  if (!confirmDelete) return;
 
-  if(!confirmDelete) return;
-  
   try {
     await api.delete(`/todos/${id}`);
     getTodos();
-  } catch (error) {
-    error.value = 'gagal menghapus data';
+  } catch (err) {
+    // 🔥 fallback local
+    todos.value = todos.value.filter(t => t.id !== id);
   }
-}
+};
 
+// MOUNT
 onMounted(() => {
   getTodos();
-})
+});
 </script>
 
+
 <template>
-  <div class="container">
-  <h1 class="title">📝 Todo App</h1>
+  <div class="min-h-screen bg-gray-900 flex items-center justify-center p-6">
+    <div class="w-full max-w-xl bg-gray-800 shadow-2xl rounded-2xl p-6">
 
-  <!-- FORM -->
-  <form @submit.prevent="addTodo" class="form">
-    <input v-model="title" placeholder="Masukan Todo..." class="input" />
-    <button type="submit" class="btn">
-      {{ submitting ? "..." : "+" }}
-    </button>
-  </form>
+      <!-- TITLE -->
+      <h1 class="text-2xl font-bold text-white mb-6 text-center">
+        📝 Todo App
+      </h1>
 
-  <!-- STATE -->
-  <p v-if="loading" class="loading">Loading...</p>
-  <p v-if="error" class="error">{{ error }}</p>
-  <p v-if="todos.length === 0" class="empty">Belum ada todo 😢</p>
-
-  <!-- LIST -->
-  <ul class="list">
-    <li v-for="todo in todos" :key="todo.id" class="todo-item">
-      
-      <div class="todo-left">
+      <!-- FORM -->
+      <form @submit.prevent="addTodo" class="flex gap-2 mb-4">
         <input
-          type="checkbox"
-          :checked="todo.completed"
-          @change="toggleTodo(todo)"
+          v-model="title"
+          placeholder="Masukkan todo..."
+          class="flex-1 px-4 py-2 bg-gray-700 text-white border border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
         />
-
-        <span
-          class="todo-text"
-          :class="{ completed: todo.completed }"
+        <button
+          type="submit"
+          class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition disabled:opacity-50"
+          :disabled="submitting"
         >
-          {{ todo.title }}
-        </span>
-      </div>
+          {{ submitting ? "..." : "+" }}
+        </button>
+      </form>
 
-      <button class="delete-btn" @click="deleteTodo(todo.id)">
-        🗑️
-      </button>
+      <!-- STATE -->
+      <p v-if="loading" class="text-gray-400 text-center">Loading...</p>
 
-    </li>
-  </ul>
-</div>
+      <p v-if="error" class="text-yellow-400 text-center mb-2">
+        {{ error }}
+      </p>
+
+      <p v-if="!loading && todos && todos.length === 0" class="text-gray-500 text-center">
+        Belum ada todo 😢
+      </p>
+
+      <!-- LIST -->
+      <ul class="space-y-3 mt-4">
+        <li
+          v-for="todo in todos"
+          :key="todo.id"
+          class="flex items-center justify-between bg-gray-700 p-3 rounded-xl shadow-md hover:bg-gray-600 transition"
+        >
+          <!-- LEFT -->
+          <div class="flex items-center gap-3">
+            <input
+              type="checkbox"
+              :checked="todo.completed"
+              @change="toggleTodo(todo)"
+              class="w-5 h-5 accent-blue-500 cursor-pointer"
+            />
+
+            <span
+              class="text-gray-100"
+              :class="{
+                'line-through text-gray-400': todo.completed
+              }"
+            >
+              {{ todo.title }}
+            </span>
+          </div>
+
+          <!-- DELETE -->
+          <button
+            @click="deleteTodo(todo.id)"
+            class="text-red-400 hover:text-red-600 transition text-lg"
+          >
+            🗑️
+          </button>
+        </li>
+      </ul>
+
+    </div>
+  </div>
 </template>
